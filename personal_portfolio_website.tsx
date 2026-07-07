@@ -1,0 +1,844 @@
+import React, { useState, useEffect, useRef } from 'react';
+
+// ==========================================
+// DEFAULT STARTING DATA (ข้อมูลเริ่มต้นตัวอย่าง)
+// ==========================================
+const DEFAULT_PROFILE = {
+  name: "ชลสิทธิ์ พิพัฒนพร (บาส)",
+  title: "Creative Developer & UI Designer",
+  tagline: "สร้างสรรค์ประสบการณ์ดิจิทัลระดับพรีเมียม ด้วยการผสมผสานระหว่างโค้ดที่ทรงพลังและการออกแบบที่ตอบโจทย์ผู้ใช้งาน",
+  location: "กรุงเทพฯ, ประเทศไทย",
+  email: "cholasit.bas@example.com",
+  github: "https://github.com",
+  linkedin: "https://linkedin.com",
+  bio: "สวัสดีครับ! ผมบาส นักพัฒนาผู้หลงใหลในการสร้างสรรค์แอปพลิเคชันที่ทำงานได้รวดเร็ว เข้าถึงได้ง่าย และมีดีไซน์ที่สวยงามสะดุดตา ผมเชี่ยวชาญด้าน React, Tailwind CSS และการพัฒนาเว็บแอปพลิเคชันรูปแบบใหม่ๆ ครับ",
+  profilePic: "", // Default placeholder used if empty
+  skills: [
+    { name: "React / Next.js", level: 95, category: "Frontend" },
+    { name: "Tailwind CSS", level: 98, category: "Frontend" },
+    { name: "Node.js", level: 85, category: "Backend" },
+    { name: "Figma (UI/UX)", level: 88, category: "Design" }
+  ],
+  experience: [
+    {
+      role: "Senior Frontend Engineer",
+      company: "Aura Creative Tech",
+      period: "2024 - ปัจจุบัน",
+      description: "นำทีมพัฒนาเครื่องมือ SaaS ยุคใหม่ ปรับโครงสร้างระบบหน้าบ้านและยกระดับประสิทธิภาพความเร็วขึ้น 35%"
+    },
+    {
+      role: "Full Stack Developer",
+      company: "Prism Digital Studio",
+      period: "2021 - 2024",
+      description: "ออกแบบและสร้างเว็บแอปพลิเคชันอีคอมเมิร์ซและพอร์ตโฟลิโอที่มีระบบหลังบ้านแบบครบวงจร"
+    }
+  ],
+  projects: [
+    {
+      id: 1,
+      title: "Zenith Workspace",
+      category: "Frontend",
+      description: "แอปพลิเคชันพื้นที่ทำงานร่วมกันแบบเรียลไทม์ (Canvas-based) สำหรับทีมนักออกแบบ",
+      tech: "React, Tailwind, Node.js",
+      accentColor: "from-blue-500 to-indigo-600"
+    },
+    {
+      id: 2,
+      title: "Nova Commerce",
+      category: "Fullstack",
+      description: "แพลตฟอร์ม Headless E-commerce ประสิทธิภาพสูง พร้อมระบบชำระเงินที่รวดเร็ว",
+      tech: "Next.js, Stripe, GraphQL",
+      accentColor: "from-violet-500 to-purple-600"
+    }
+  ]
+};
+
+// Custom SVG Icons
+const Icons = {
+  Edit: () => (
+    <svg className="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+    </svg>
+  ),
+  Eye: () => (
+    <svg className="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+    </svg>
+  ),
+  Trash: () => (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+    </svg>
+  ),
+  Plus: () => (
+    <svg className="w-5 h-5 mr-1 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+    </svg>
+  ),
+  Save: () => (
+    <svg className="w-5 h-5 mr-2 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+    </svg>
+  ),
+  Camera: () => (
+    <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  ),
+  Sun: () => (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+    </svg>
+  ),
+  Moon: () => (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+    </svg>
+  ),
+  MapPin: () => (
+    <svg className="w-4 h-4 mr-1 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+    </svg>
+  ),
+  Mail: () => (
+    <svg className="w-4 h-4 mr-1 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    </svg>
+  )
+};
+
+export default function App() {
+  const [profile, setProfile] = useState(() => {
+    // โหลดข้อมูลจาก LocalStorage ถ้ามีอยู่แล้ว
+    const saved = localStorage.getItem('user_portfolio_profile');
+    return saved ? JSON.parse(saved) : DEFAULT_PROFILE;
+  });
+
+  const [activeMode, setActiveMode] = useState('edit'); // 'edit' or 'preview'
+  const [darkMode, setDarkMode] = useState(true);
+  const [activeTab, setActiveTab] = useState('general'); // editor sub-tabs
+  const [toastMsg, setToastMsg] = useState("");
+  const fileInputRef = useRef(null);
+
+  // States for adding dynamic items
+  const [newSkill, setNewSkill] = useState({ name: "", level: 80, category: "Frontend" });
+  const [newExp, setNewExp] = useState({ role: "", company: "", period: "", description: "" });
+  const [newProj, setNewProj] = useState({ title: "", category: "Frontend", description: "", tech: "", accentColor: "from-blue-500 to-indigo-600" });
+
+  const showToast = (msg) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(""), 3000);
+  };
+
+  const handleSaveToLocal = () => {
+    localStorage.setItem('user_portfolio_profile', JSON.stringify(profile));
+    showToast("บันทึกข้อมูลโปรไฟล์ของคุณเรียบร้อยแล้ว! 🎉");
+  };
+
+  const handleReset = () => {
+    if (window.confirm("คุณต้องการล้างข้อมูลและกลับไปใช้ข้อมูลตัวอย่างดั้งเดิมใช่หรือไม่?")) {
+      setProfile(DEFAULT_PROFILE);
+      localStorage.removeItem('user_portfolio_profile');
+      showToast("รีเซ็ตข้อมูลเรียบร้อยแล้ว");
+    }
+  };
+
+  // Image Upload handler (Base64)
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        showToast("ขนาดไฟล์ภาพต้องไม่เกิน 2MB เพื่อประสิทธิภาพสูงสุด");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfile(prev => ({ ...prev, profilePic: reader.result }));
+        showToast("อัปโหลดรูปโปรไฟล์เรียบร้อยแล้ว! 📸");
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const triggerFileSelect = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  // Generic state updater
+  const handleFieldChange = (field, value) => {
+    setProfile(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Skills dynamic manager
+  const addSkill = () => {
+    if (!newSkill.name.trim()) return;
+    setProfile(prev => ({
+      ...prev,
+      skills: [...prev.skills, { ...newSkill }]
+    }));
+    setNewSkill({ name: "", level: 80, category: "Frontend" });
+    showToast("เพิ่มทักษะความชำระคุณเรียบร้อย!");
+  };
+
+  const removeSkill = (index) => {
+    setProfile(prev => ({
+      ...prev,
+      skills: prev.skills.filter((_, idx) => idx !== index)
+    }));
+  };
+
+  // Experience dynamic manager
+  const addExperience = () => {
+    if (!newExp.role.trim() || !newExp.company.trim()) return;
+    setProfile(prev => ({
+      ...prev,
+      experience: [...prev.experience, { ...newExp }]
+    }));
+    setNewExp({ role: "", company: "", period: "", description: "" });
+    showToast("เพิ่มประวัติการทำงานใหม่เรียบร้อย!");
+  };
+
+  const removeExperience = (index) => {
+    setProfile(prev => ({
+      ...prev,
+      experience: prev.experience.filter((_, idx) => idx !== index)
+    }));
+  };
+
+  // Projects dynamic manager
+  const addProject = () => {
+    if (!newProj.title.trim()) return;
+    setProfile(prev => ({
+      ...prev,
+      projects: [...prev.projects, { ...newProj, id: Date.now() }]
+    }));
+    setNewProj({ title: "", category: "Frontend", description: "", tech: "", accentColor: "from-blue-500 to-indigo-600" });
+    showToast("เพิ่มโครงการผลงานเรียบร้อย!");
+  };
+
+  const removeProject = (id) => {
+    setProfile(prev => ({
+      ...prev,
+      projects: prev.projects.filter(proj => proj.id !== id)
+    }));
+  };
+
+  return (
+    <div className={`${darkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-slate-50 text-slate-800'} min-h-screen font-sans transition-colors duration-300 selection:bg-indigo-500 selection:text-white pb-16`}>
+      
+      {/* ----------------- TOP NAVBAR CONTROLLER ----------------- */}
+      <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/70 dark:bg-zinc-950/70 border-b border-zinc-200 dark:border-zinc-800 px-6 py-4 shadow-sm">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="w-3 h-3 rounded-full bg-indigo-500 animate-ping" />
+            <h1 className="font-extrabold text-lg tracking-wider">
+              PORTFOLIO<span className="text-indigo-500">BUILDER</span>
+            </h1>
+            <span className="text-xs bg-zinc-200 dark:bg-zinc-800 px-2 py-0.5 rounded text-zinc-500 font-mono">v2.0</span>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Mode Switcher */}
+            <div className="bg-zinc-100 dark:bg-zinc-900 p-1 rounded-xl flex border border-zinc-200 dark:border-zinc-800">
+              <button 
+                onClick={() => setActiveMode('edit')}
+                className={`px-4 py-1.5 rounded-lg text-sm font-bold flex items-center transition-all ${activeMode === 'edit' ? 'bg-white dark:bg-zinc-800 text-indigo-500 shadow-sm' : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'}`}
+              >
+                <Icons.Edit />
+                โหมดแก้ไขข้อมูล
+              </button>
+              <button 
+                onClick={() => setActiveMode('preview')}
+                className={`px-4 py-1.5 rounded-lg text-sm font-bold flex items-center transition-all ${activeMode === 'preview' ? 'bg-white dark:bg-zinc-800 text-indigo-500 shadow-sm' : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'}`}
+              >
+                <Icons.Eye />
+                ดูหน้าเว็บจริง
+              </button>
+            </div>
+
+            {/* Quick Actions */}
+            <button 
+              onClick={handleSaveToLocal}
+              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold flex items-center transition-all"
+              title="บันทึกข้อมูลไว้ใช้งานต่อ"
+            >
+              <Icons.Save />
+              <span>บันทึก</span>
+            </button>
+
+            <button 
+              onClick={() => setDarkMode(!darkMode)}
+              className="p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-all text-zinc-500"
+            >
+              {darkMode ? <Icons.Sun /> : <Icons.Moon />}
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* ----------------- TOAST MESSAGE POPUP ----------------- */}
+      {toastMsg && (
+        <div className="fixed bottom-6 right-6 z-50 bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 px-5 py-3 rounded-2xl shadow-2xl border border-zinc-800/20 font-semibold text-sm flex items-center animate-bounce">
+          <span>{toastMsg}</span>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* ----------------- 1. EDITOR MODE ACTIVE ----------------- */}
+      {/* ========================================================= */}
+      {activeMode === 'edit' && (
+        <div className="max-w-4xl mx-auto px-6 py-12">
+          
+          <div className="bg-zinc-100/60 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-900 rounded-3xl p-6 md:p-8">
+            <div className="flex justify-between items-start mb-6 pb-6 border-b border-zinc-200 dark:border-zinc-800">
+              <div>
+                <h2 className="text-2xl font-black">ตัวจัดแต่งโปรไฟล์ส่วนตัว</h2>
+                <p className="text-zinc-400 text-sm mt-1">กรอกข้อมูลและเปลี่ยนภาพของคุณเองเพื่อจัดสร้างหน้าเว็บพอร์ตโฟลิโอส่วนตัว</p>
+              </div>
+              <button 
+                onClick={handleReset}
+                className="text-xs bg-red-500/10 hover:bg-red-500/20 text-red-500 px-3 py-1.5 rounded-xl transition-all font-semibold"
+              >
+                ล้างข้อมูลใหม่
+              </button>
+            </div>
+
+            {/* TAB SELECTION */}
+            <div className="flex gap-2 mb-8 overflow-x-auto pb-2 border-b border-zinc-200/50 dark:border-zinc-800/50">
+              {[
+                { id: 'general', label: 'ข้อมูลทั่วไป & ภาพถ่าย' },
+                { id: 'skills', label: 'ทักษะความชำนาญ' },
+                { id: 'experience', label: 'ประวัติทำงาน' },
+                { id: 'projects', label: 'โปรเจกต์เด่น' }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-indigo-500 text-white shadow-md' : 'bg-transparent text-zinc-400 hover:text-zinc-200'}`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* A. TAB CONTENT: GENERAL INFO & IMAGE */}
+            {activeTab === 'general' && (
+              <div className="space-y-6">
+                
+                {/* Profile Image Upload Circle */}
+                <div className="flex flex-col items-center sm:flex-row gap-6 p-6 rounded-2xl bg-white dark:bg-zinc-950/30 border border-zinc-200 dark:border-zinc-900">
+                  <div className="relative group w-32 h-32 rounded-2xl overflow-hidden bg-zinc-800 flex items-center justify-center border-2 border-dashed border-zinc-700">
+                    {profile.profilePic ? (
+                      <img src={profile.profilePic} alt="Profile" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-center p-2">
+                        <span className="text-xs font-mono text-zinc-500">ไม่มีรูปภาพ</span>
+                      </div>
+                    )}
+                    
+                    {/* Hover trigger for uploading */}
+                    <div 
+                      onClick={triggerFileSelect}
+                      className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity"
+                    >
+                      <Icons.Camera />
+                    </div>
+                  </div>
+
+                  <div className="flex-1 space-y-2 text-center sm:text-left">
+                    <h3 className="font-extrabold text-lg">รูปโปรไฟล์ของคุณ (Owner Picture)</h3>
+                    <p className="text-zinc-400 text-xs leading-relaxed max-w-md">
+                      อัปโหลดรูปภาพใบหน้า รูปถ่ายตัวคุณ หรือโลโก้ส่วนตัวเพื่อแสดงบนหน้าปกพอร์ตโฟลิโอของคุณเองทันที
+                    </p>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef}
+                      onChange={handleImageUpload}
+                      accept="image/*"
+                      className="hidden"
+                    />
+                    <div className="flex gap-2 justify-center sm:justify-start pt-2">
+                      <button 
+                        onClick={triggerFileSelect}
+                        className="text-xs font-bold bg-indigo-500/15 text-indigo-400 hover:bg-indigo-500/35 px-4 py-2 rounded-xl transition-all"
+                      >
+                        เลือกรูปถ่าย
+                      </button>
+                      {profile.profilePic && (
+                        <button 
+                          onClick={() => handleFieldChange('profilePic', '')}
+                          className="text-xs font-bold bg-zinc-500/10 text-zinc-400 hover:bg-zinc-500/20 px-3 py-2 rounded-xl transition-all"
+                        >
+                          ลบรูปภาพ
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">ชื่อ-นามสกุล (ภาษาไทย/อังกฤษ)</label>
+                    <input 
+                      type="text" 
+                      value={profile.name}
+                      onChange={(e) => handleFieldChange('name', e.target.value)}
+                      placeholder="ชลสิทธิ์ พิพัฒนพร (บาส)"
+                      className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">ตำแหน่งงาน / ความเชี่ยวชาญ</label>
+                    <input 
+                      type="text" 
+                      value={profile.title}
+                      onChange={(e) => handleFieldChange('title', e.target.value)}
+                      placeholder="Creative Developer & UI Designer"
+                      className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">ประโยคสโลแกนสะดุดตา (Tagline)</label>
+                  <input 
+                    type="text" 
+                    value={profile.tagline}
+                    onChange={(e) => handleFieldChange('tagline', e.target.value)}
+                    placeholder="สร้างสรรค์ประสบการณ์ดิจิทัลระดับพรีเมียมด้วย..."
+                    className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">สถานที่ทำงาน / ที่อยู่ปัจจุบัน</label>
+                    <input 
+                      type="text" 
+                      value={profile.location}
+                      onChange={(e) => handleFieldChange('location', e.target.value)}
+                      placeholder="กรุงเทพฯ, ประเทศไทย"
+                      className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">อีเมลผู้ติดต่อ</label>
+                    <input 
+                      type="email" 
+                      value={profile.email}
+                      onChange={(e) => handleFieldChange('email', e.target.value)}
+                      placeholder="bas@example.com"
+                      className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">ประวัติย่อแบบละเอียด (Bio)</label>
+                  <textarea 
+                    rows={4}
+                    value={profile.bio}
+                    onChange={(e) => handleFieldChange('bio', e.target.value)}
+                    placeholder="เล่าประวัติส่วนตัวสั้นๆ ความสนใจพิเศษ แรงบันดาลใจ และไลฟ์สไตล์นอกเหนือจากเวลางาน..."
+                    className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+              </div>
+            )}
+
+            {/* B. TAB CONTENT: SKILLS */}
+            {activeTab === 'skills' && (
+              <div className="space-y-6">
+                <h3 className="font-bold text-lg text-indigo-400">จัดการทักษะส่วนบุคคล</h3>
+                
+                {/* Display Current Skills */}
+                <div className="flex flex-wrap gap-2.5 min-h-[40px] p-4 rounded-xl bg-white dark:bg-zinc-950/30 border border-zinc-200 dark:border-zinc-900">
+                  {profile.skills.length === 0 ? (
+                    <span className="text-xs text-zinc-500 font-mono">ยังไม่มีทักษะที่บันทึกไว้</span>
+                  ) : (
+                    profile.skills.map((skill, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                        <span>{skill.name} ({skill.level}%) - {skill.category}</span>
+                        <button 
+                          onClick={() => removeSkill(idx)}
+                          className="hover:text-red-400 transition-colors ml-1 font-bold"
+                          title="ลบ"
+                        >
+                          ✕
+                        </button>
+                      </span>
+                    ))
+                  )}
+                </div>
+
+                {/* Adding form */}
+                <div className="p-5 rounded-2xl bg-zinc-200/50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800/60 space-y-4">
+                  <h4 className="text-xs font-bold uppercase text-zinc-400">เพิ่มทักษะความสามารถใหม่</h4>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <input 
+                        type="text"
+                        placeholder="ชื่อทักษะ เช่น JavaScript"
+                        value={newSkill.name}
+                        onChange={(e) => setNewSkill({...newSkill, name: e.target.value})}
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <select 
+                        value={newSkill.category}
+                        onChange={(e) => setNewSkill({...newSkill, category: e.target.value})}
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-xs focus:outline-none"
+                      >
+                        <option value="Frontend">Frontend</option>
+                        <option value="Backend">Backend</option>
+                        <option value="Design">Design</option>
+                      </select>
+                    </div>
+                    <div>
+                      <input 
+                        type="number"
+                        min="1" max="100"
+                        placeholder="ระดับ % (1-100)"
+                        value={newSkill.level}
+                        onChange={(e) => setNewSkill({...newSkill, level: parseInt(e.target.value) || 80})}
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+                  </div>
+                  <button 
+                    onClick={addSkill}
+                    className="py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all inline-flex items-center"
+                  >
+                    <Icons.Plus /> เพิ่มทักษะเข้าลิสต์
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* C. TAB CONTENT: EXPERIENCE */}
+            {activeTab === 'experience' && (
+              <div className="space-y-6">
+                <h3 className="font-bold text-lg text-emerald-400">จัดการประวัติการทำงานของคุณ</h3>
+
+                <div className="space-y-3">
+                  {profile.experience.map((job, idx) => (
+                    <div key={idx} className="flex items-start justify-between p-4 rounded-xl bg-white dark:bg-zinc-950/30 border border-zinc-200 dark:border-zinc-900">
+                      <div>
+                        <h4 className="font-bold text-sm">{job.role}</h4>
+                        <p className="text-xs text-indigo-400">{job.company} | {job.period}</p>
+                        <p className="text-xs text-zinc-400 mt-1">{job.description}</p>
+                      </div>
+                      <button 
+                        onClick={() => removeExperience(idx)}
+                        className="p-1.5 hover:text-red-400 transition-colors"
+                        title="ลบออก"
+                      >
+                        <Icons.Trash />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="p-5 rounded-2xl bg-zinc-200/50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800/60 space-y-4">
+                  <h4 className="text-xs font-bold uppercase text-zinc-400">เพิ่มประวัติการทำงานใหม่</h4>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <input 
+                      type="text"
+                      placeholder="ตำแหน่งงาน เช่น UX/UI Intern"
+                      value={newExp.role}
+                      onChange={(e) => setNewExp({...newExp, role: e.target.value})}
+                      className="w-full px-3 py-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-xs focus:outline-none"
+                    />
+                    <input 
+                      type="text"
+                      placeholder="ชื่อบริษัท / สังกัด"
+                      value={newExp.company}
+                      onChange={(e) => setNewExp({...newExp, company: e.target.value})}
+                      className="w-full px-3 py-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-xs focus:outline-none"
+                    />
+                    <input 
+                      type="text"
+                      placeholder="ระยะเวลาการทำงาน เช่น 2021 - 2023"
+                      value={newExp.period}
+                      onChange={(e) => setNewExp({...newExp, period: e.target.value})}
+                      className="w-full px-3 py-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-xs focus:outline-none"
+                    />
+                  </div>
+                  <textarea 
+                    rows={3}
+                    placeholder="รายละเอียดหน้าที่งานที่รับผิดชอบและความสำเร็จในบทบาทนี้..."
+                    value={newExp.description}
+                    onChange={(e) => setNewExp({...newExp, description: e.target.value})}
+                    className="w-full px-3 py-2 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-xs focus:outline-none"
+                  />
+                  <button 
+                    onClick={addExperience}
+                    className="py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all inline-flex items-center"
+                  >
+                    <Icons.Plus /> เพิ่มเข้าไทม์ไลน์
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* D. TAB CONTENT: PROJECTS */}
+            {activeTab === 'projects' && (
+              <div className="space-y-6">
+                <h3 className="font-bold text-lg text-violet-400">จัดการผลงาน / โปรเจกต์</h3>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {profile.projects.map((proj) => (
+                    <div key={proj.id} className="p-4 rounded-xl bg-white dark:bg-zinc-950/30 border border-zinc-200 dark:border-zinc-900 flex justify-between">
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-indigo-400">{proj.category}</span>
+                        <h4 className="font-bold text-sm mt-0.5">{proj.title}</h4>
+                        <p className="text-xs text-zinc-400 mt-1 line-clamp-2">{proj.description}</p>
+                      </div>
+                      <button 
+                        onClick={() => removeProject(proj.id)}
+                        className="p-1 hover:text-red-400 transition-colors ml-2 self-start"
+                        title="ลบออก"
+                      >
+                        <Icons.Trash />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="p-5 rounded-2xl bg-zinc-200/50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800/60 space-y-4">
+                  <h4 className="text-xs font-bold uppercase text-zinc-400">เพิ่มผลงาน / โปรเจกต์ชิ้นใหม่</h4>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <input 
+                      type="text"
+                      placeholder="ชื่อโปรเจกต์ เช่น Nova Commerce"
+                      value={newProj.title}
+                      onChange={(e) => setNewProj({...newProj, title: e.target.value})}
+                      className="w-full px-3 py-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-xs focus:outline-none"
+                    />
+                    <select 
+                      value={newProj.category}
+                      onChange={(e) => setNewProj({...newProj, category: e.target.value})}
+                      className="w-full px-3 py-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-xs focus:outline-none"
+                    >
+                      <option value="Frontend">Frontend</option>
+                      <option value="Fullstack">Fullstack</option>
+                      <option value="Tools">Tools</option>
+                      <option value="Creative">Creative</option>
+                    </select>
+                    <input 
+                      type="text"
+                      placeholder="เครื่องมือหรือภาษาที่ใช้ เช่น React, Node.js, Stripe"
+                      value={newProj.tech}
+                      onChange={(e) => setNewProj({...newProj, tech: e.target.value})}
+                      className="w-full px-3 py-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-xs focus:outline-none md:col-span-2"
+                    />
+                  </div>
+                  <textarea 
+                    rows={3}
+                    placeholder="อธิบายรายละเอียดผลงานชิ้นนี้สั้นๆ..."
+                    value={newProj.description}
+                    onChange={(e) => setNewProj({...newProj, description: e.target.value})}
+                    className="w-full px-3 py-2 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-xs focus:outline-none"
+                  />
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-bold text-zinc-400">สีโทนโปรเจกต์:</span>
+                    <div className="flex gap-2">
+                      {[
+                        { val: "from-blue-500 to-indigo-600", color: "bg-blue-600" },
+                        { val: "from-violet-500 to-purple-600", color: "bg-purple-600" },
+                        { val: "from-emerald-500 to-teal-600", color: "bg-emerald-600" },
+                        { val: "from-rose-500 to-pink-600", color: "bg-pink-600" }
+                      ].map(item => (
+                        <button 
+                          key={item.val}
+                          type="button"
+                          onClick={() => setNewProj({...newProj, accentColor: item.val})}
+                          className={`w-6 h-6 rounded-full ${item.color} border-2 ${newProj.accentColor === item.val ? 'border-white ring-2 ring-indigo-500' : 'border-transparent'}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <button 
+                    onClick={addProject}
+                    className="py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all inline-flex items-center"
+                  >
+                    <Icons.Plus /> เพิ่มผลงานชิ้นใหม่
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Quick Helper Banner */}
+            <div className="mt-8 p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-center">
+              <p className="text-xs text-indigo-400 font-medium">
+                💡 หลังจากใส่ข้อมูลที่ต้องการเรียบร้อยแล้ว กดปุ่ม <span className="font-bold underline">"ดูหน้าเว็บจริง"</span> ที่เมนูด้านบนเพื่อชมพอร์ตโฟลิโอแสนสวยของคุณได้ทันที!
+              </p>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+
+      {/* ========================================================== */}
+      {/* ----------------- 2. PREVIEW PORTFOLIO ACTIVE ------------ */}
+      {/* ========================================================== */}
+      {activeMode === 'preview' && (
+        <div className="animate-fade-in">
+          
+          {/* ----------------- PROFILE HERO BANNER ----------------- */}
+          <section className="relative overflow-hidden py-24 px-6 max-w-5xl mx-auto flex flex-col items-center text-center">
+            
+            {/* Background Blob Details */}
+            <div className="absolute -top-12 -left-12 w-64 h-64 bg-indigo-500/10 dark:bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-12 -right-12 w-64 h-64 bg-violet-500/10 dark:bg-violet-500/5 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Render Owner Avatar Image */}
+            <div className="relative mb-8 w-32 h-32 rounded-3xl overflow-hidden border-2 border-indigo-500 shadow-xl shadow-indigo-500/20">
+              {profile.profilePic ? (
+                <img src={profile.profilePic} alt={profile.name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white text-3xl font-black">
+                  {profile.name.charAt(0)}
+                </div>
+              )}
+            </div>
+
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200/50 dark:border-indigo-800/50 text-indigo-600 dark:text-indigo-400 text-xs font-bold uppercase tracking-wider mb-6">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>ยินดีต้อนรับสู่พอร์ตโฟลิโอของผม</span>
+            </div>
+
+            <h2 className="text-4xl sm:text-6xl font-black tracking-tight max-w-4xl leading-tight">
+              สวัสดีครับ ผม <span className="bg-gradient-to-r from-indigo-500 via-violet-500 to-pink-500 bg-clip-text text-transparent">{profile.name}</span>
+            </h2>
+            <p className="mt-2 text-indigo-500 dark:text-indigo-400 font-bold text-lg tracking-wide">{profile.title}</p>
+
+            <p className="mt-6 text-base sm:text-lg text-zinc-500 dark:text-zinc-400 max-w-2xl font-light leading-relaxed">
+              {profile.tagline}
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-3 justify-center text-sm font-semibold">
+              <span className="px-4 py-2 bg-zinc-200/50 dark:bg-zinc-900 rounded-xl flex items-center">
+                <Icons.MapPin /> {profile.location}
+              </span>
+              <span className="px-4 py-2 bg-zinc-200/50 dark:bg-zinc-900 rounded-xl flex items-center">
+                <Icons.Mail /> {profile.email}
+              </span>
+            </div>
+          </section>
+
+          {/* ----------------- ABOUT DETAIL SECTION ----------------- */}
+          <section className="py-16 px-6 max-w-4xl mx-auto border-t border-zinc-200/60 dark:border-zinc-900">
+            <div className="grid md:grid-cols-3 gap-8 items-start">
+              <div className="md:col-span-1">
+                <h3 className="text-2xl font-extrabold tracking-tight">เกี่ยวกับตัวผม</h3>
+                <div className="w-12 h-1 bg-indigo-500 rounded mt-2" />
+              </div>
+              <div className="md:col-span-2 text-zinc-600 dark:text-zinc-400 leading-relaxed space-y-4">
+                <p className="whitespace-pre-wrap">{profile.bio}</p>
+              </div>
+            </div>
+          </section>
+
+          {/* ----------------- DYNAMIC SKILLS MATRIX ----------------- */}
+          {profile.skills.length > 0 && (
+            <section className="py-16 px-6 max-w-4xl mx-auto border-t border-zinc-200/60 dark:border-zinc-900">
+              <div className="mb-10 text-center">
+                <h3 className="text-2xl font-extrabold tracking-tight">ทักษะและความเชี่ยวชาญ</h3>
+                <p className="text-xs text-zinc-400 mt-1">ขีดความสามารถและระบบปฏิบัติการในการพัฒนาเว็บไซต์</p>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-6">
+                {profile.skills.map((skill, idx) => (
+                  <div key={idx} className="p-4 rounded-2xl bg-zinc-100/50 dark:bg-zinc-900/40 border border-zinc-200/50 dark:border-zinc-800/50">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-bold text-sm">{skill.name}</span>
+                      <span className="text-xs font-mono text-zinc-400 bg-zinc-200/50 dark:bg-zinc-800 px-2 py-0.5 rounded-md">
+                        {skill.category}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-indigo-500 rounded-full transition-all" style={{ width: `${skill.level}%` }} />
+                      </div>
+                      <span className="text-xs font-bold text-indigo-400">{skill.level}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* ----------------- CAREER EXPERIENCE TIMELINE ----------------- */}
+          {profile.experience.length > 0 && (
+            <section className="py-16 px-6 max-w-4xl mx-auto border-t border-zinc-200/60 dark:border-zinc-900">
+              <div className="mb-10">
+                <h3 className="text-2xl font-extrabold tracking-tight">ประวัติการทำงานและผลงานสายอาชีพ</h3>
+                <p className="text-xs text-zinc-400 mt-1">ประสบการณ์ที่หล่อหลอมความเชี่ยวชาญของผม</p>
+              </div>
+
+              <div className="border-l-2 border-indigo-500/30 pl-6 space-y-10 ml-2">
+                {profile.experience.map((job, idx) => (
+                  <div key={idx} className="relative group">
+                    <div className="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-zinc-950 border-4 border-indigo-500" />
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <h4 className="text-lg font-bold group-hover:text-indigo-500 transition-colors">{job.role}</h4>
+                      <span className="text-xs font-mono font-semibold px-2 py-1 rounded bg-zinc-200/50 dark:bg-zinc-900 text-zinc-400 border border-zinc-200 dark:border-zinc-800 w-max">
+                        {job.period}
+                      </span>
+                    </div>
+                    <p className="text-sm font-semibold text-indigo-400 mt-0.5">{job.company}</p>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2 leading-relaxed">{job.description}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* ----------------- DYNAMIC SELECTED PROJECTS ----------------- */}
+          {profile.projects.length > 0 && (
+            <section className="py-16 px-6 max-w-4xl mx-auto border-t border-zinc-200/60 dark:border-zinc-900">
+              <div className="mb-10 text-center">
+                <h3 className="text-2xl font-extrabold tracking-tight">โครงการผลงานเด่น</h3>
+                <p className="text-xs text-zinc-400 mt-1">โปรเจกต์งานที่ผมภูมิใจนำเสนอและพร้อมพัฒนา</p>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-6">
+                {profile.projects.map((proj) => (
+                  <div key={proj.id} className="rounded-2xl border border-zinc-200/60 dark:border-zinc-900 bg-white dark:bg-zinc-900/40 p-6 flex flex-col justify-between h-[220px]">
+                    <div>
+                      <div className="flex justify-between items-center mb-3">
+                        <span className={`w-3.5 h-3.5 rounded-full bg-gradient-to-r ${proj.accentColor}`} />
+                        <span className="text-[10px] uppercase font-mono tracking-wider font-bold text-zinc-400">{proj.category}</span>
+                      </div>
+                      <h4 className="text-lg font-bold">{proj.title}</h4>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1.5 line-clamp-3 leading-relaxed">{proj.description}</p>
+                    </div>
+
+                    <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between text-[11px] font-mono text-zinc-400">
+                      <span>{proj.tech}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* ----------------- PUBLIC FOOTER ----------------- */}
+          <footer className="mt-16 py-8 px-6 text-center border-t border-zinc-200/60 dark:border-zinc-900 text-xs text-zinc-500">
+            <p>&copy; {new Date().getFullYear()} {profile.name}. จัดทำขึ้นโดยใช้ Portfolio Builder.</p>
+          </footer>
+
+        </div>
+      )}
+
+    </div>
+  );
+}
